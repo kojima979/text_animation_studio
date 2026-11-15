@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Animation Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="./js/app.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .bg-checker {
+      background-color: #1e293b;
+      background-image:
+        linear-gradient(45deg, #334155 25%, transparent 25%),
+        linear-gradient(-45deg, #334155 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #334155 75%),
+        linear-gradient(-45deg, transparent 75%, #334155 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col" x-data="animationApp" x-init="init()" x-cloak>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center font-bold text-slate-950 shadow">
+          T
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white" x-text="t('appTitle')"></h1>
+          <p class="text-xs text-slate-400 hidden sm:block" x-text="t('appSubtitle')"></p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Language Toggle -->
+        <div class="inline-flex rounded-lg bg-slate-800 p-1 border border-slate-700">
+          <button type="button"
+                  @click="setLang('ja')"
+                  :class="lang === 'ja' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'"
+                  class="px-2.5 py-1 text-xs font-semibold rounded-md transition">
+            JA
+          </button>
+          <button type="button"
+                  @click="setLang('en')"
+                  :class="lang === 'en' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'"
+                  class="px-2.5 py-1 text-xs font-semibold rounded-md transition">
+            EN
+          </button>
+        </div>
+
+        <!-- License Anchor -->
+        <a href="#licenses"
+           class="text-xs text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg px-3 py-1.5 transition"
+           x-text="t('licenseBtn')"></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Mode Tabs -->
+    <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-4">
+      <button type="button"
+              @click="activeTab = 'typewriter'"
+              :class="activeTab === 'typewriter' ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20' : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'"
+              class="px-5 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+        <span>⌨️</span>
+        <span x-text="t('tabTypewriter')"></span>
+      </button>
+      <button type="button"
+              @click="activeTab = 'scenario'"
+              :class="activeTab === 'scenario' ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20' : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'"
+              class="px-5 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+        <span>🎬</span>
+        <span x-text="t('tabScenario')"></span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Left Column: Input & Settings -->
+      <section class="lg:col-span-7 space-y-5">
+
+        <!-- Typing GIF Form -->
+        <div x-show="activeTab === 'typewriter'" class="space-y-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider" x-text="t('inputSectionTitle')"></h2>
+              <div class="flex gap-2">
+                <button type="button" @click="loadSample()" class="text-xs text-emerald-400 hover:text-emerald-300" x-text="t('loadSampleBtn')"></button>
+                <span class="text-slate-700">|</span>
+                <button type="button" @click="resetDefaults()" class="text-xs text-slate-400 hover:text-slate-300" x-text="t('resetBtn')"></button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-1.5" x-text="t('typewriterTextLabel')"></label>
+              <textarea x-model="tw.text" rows="4"
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 px-3.5 py-2.5 text-sm text-white placeholder-slate-500"></textarea>
+              <p class="mt-1.5 text-xs text-slate-400" x-text="t('typewriterTextHint')"></p>
+            </div>
+          </div>
+
+          <!-- Typing GIF Basic Settings -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider" x-text="t('settingsBasic')"></h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('fontLabel')"></label>
+                <select x-model="tw.font_id"
+                        class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                  <template x-for="f in fonts" :key="f.id">
+                    <option :value="f.id" x-text="`${f.name} — ${lang === 'ja' ? f.style_ja : f.style_en} (${f.license_name})`"></option>
+                  </template>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">
+                  <span x-text="t('fontSizeLabel')"></span>: <span class="text-emerald-400 font-semibold" x-text="tw.font_size"></span>
+                </label>
+                <input type="range" min="16" max="120" step="2" x-model.number="tw.font_size" class="w-full accent-emerald-500" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">
+                  <span x-text="t('charDelayLabel')"></span>: <span class="text-emerald-400 font-semibold" x-text="tw.char_delay"></span>
+                </label>
+                <input type="range" min="20" max="500" step="10" x-model.number="tw.char_delay" class="w-full accent-emerald-500" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('textColorLabel')"></label>
+                <div class="flex items-center gap-2">
+                  <input type="color" x-model="tw.color" class="h-9 w-12 rounded bg-slate-950 border border-slate-700 cursor-pointer" />
+                  <input type="text" x-model="tw.color" class="flex-1 rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm font-mono" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('bgColorLabel')"></label>
+                <div class="flex items-center gap-2">
+                  <label class="inline-flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer">
+                    <input type="checkbox" x-model="tw.bgTransparent" class="rounded accent-emerald-500" />
+                    <span x-text="t('bgTransparent')"></span>
+                  </label>
+                  <template x-if="!tw.bgTransparent">
+                    <input type="color" x-model="tw.background_color" class="h-8 w-10 rounded bg-slate-950 border border-slate-700 cursor-pointer ml-auto" />
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <!-- Advanced Toggle -->
+            <div class="pt-2 border-t border-slate-800">
+              <button type="button" @click="showAdvanced = !showAdvanced"
+                      class="text-xs font-medium text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                <span x-text="showAdvanced ? '▼' : '▶'"></span>
+                <span x-text="t('settingsAdvanced')"></span>
+              </button>
+
+              <div x-show="showAdvanced" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('cursorCharLabel')"></label>
+                  <input type="text" x-model="tw.cursor" maxlength="5" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('blinkIntervalLabel')"></label>
+                  <input type="number" min="50" max="3000" step="50" x-model.number="tw.cursor_blink_interval" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('blinkCountLabel')"></label>
+                  <input type="number" min="0" max="20" x-model.number="tw.blink_count" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('endDelayLabel')"></label>
+                  <input type="number" min="0" max="10000" step="100" x-model.number="tw.end_delay" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('paddingLabel')"></label>
+                  <input type="number" min="0" max="200" x-model.number="tw.padding" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div class="flex items-center pt-5">
+                  <label class="inline-flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+                    <input type="checkbox" x-model="tw.loop" class="rounded accent-emerald-500" />
+                    <span x-text="t('loopLabel')"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scroll Credits Form -->
+        <div x-show="activeTab === 'scenario'" class="space-y-5">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider" x-text="t('inputSectionTitle')"></h2>
+              <div class="flex gap-2">
+                <button type="button" @click="loadSample()" class="text-xs text-emerald-400 hover:text-emerald-300" x-text="t('loadSampleBtn')"></button>
+                <span class="text-slate-700">|</span>
+                <button type="button" @click="resetDefaults()" class="text-xs text-slate-400 hover:text-slate-300" x-text="t('resetBtn')"></button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-1.5" x-text="t('scenarioTextLabel')"></label>
+              <textarea x-model="sc.text" rows="7"
+                        class="w-full rounded-xl bg-slate-950 border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500"></textarea>
+              <p class="mt-1.5 text-xs text-slate-400" x-text="t('scenarioTextHint')"></p>
+            </div>
+          </div>
+
+          <!-- Scroll Credits Basic Settings -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider" x-text="t('settingsBasic')"></h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('fontLabel')"></label>
+                <select x-model="sc.font_id"
+                        class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                  <template x-for="f in fonts" :key="f.id">
+                    <option :value="f.id" x-text="`${f.name} — ${lang === 'ja' ? f.style_ja : f.style_en} (${f.license_name})`"></option>
+                  </template>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('outputFormatLabel')"></label>
+                <select x-model="sc.output_format" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                  <option value="gif">GIF (Transparent OK)</option>
+                  <option value="webm">WebM (Video)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('alignmentLabel')"></label>
+                <select x-model="sc.alignment" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                  <option value="center" x-text="t('alignCenter')"></option>
+                  <option value="left" x-text="t('alignLeft')"></option>
+                  <option value="right" x-text="t('alignRight')"></option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('resolutionLabel')"></label>
+                <select x-model="sc.resolutionPreset" @change="applyResolutionPreset()"
+                        class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                  <option value="1920x1080">1920 × 1080 (Full HD)</option>
+                  <option value="1280x720">1280 × 720 (HD)</option>
+                  <option value="800x600">800 × 600</option>
+                  <option value="640x480">640 × 480</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">
+                  <span x-text="t('scrollSpeedLabel')"></span>: <span class="text-emerald-400 font-semibold" x-text="sc.scroll_speed"></span>
+                </label>
+                <input type="range" min="20" max="300" step="10" x-model.number="sc.scroll_speed" class="w-full accent-emerald-500" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('textColorLabel')"></label>
+                <div class="flex items-center gap-2">
+                  <input type="color" x-model="sc.font_color" class="h-9 w-12 rounded bg-slate-950 border border-slate-700 cursor-pointer" />
+                  <input type="text" x-model="sc.font_color" class="flex-1 rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm font-mono" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('bgColorLabel')"></label>
+                <div class="flex items-center gap-2">
+                  <label class="inline-flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer">
+                    <input type="checkbox" x-model="sc.bgTransparent" class="rounded accent-emerald-500" />
+                    <span x-text="t('bgTransparent')"></span>
+                  </label>
+                  <template x-if="!sc.bgTransparent">
+                    <input type="color" x-model="sc.background_color" class="h-8 w-10 rounded bg-slate-950 border border-slate-700 cursor-pointer ml-auto" />
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <p x-show="sc.output_format === 'webm'"
+               class="text-xs text-cyan-300 bg-cyan-950/40 border border-cyan-800/50 rounded-lg px-3 py-2"
+               x-text="t('webmRealtimeNote')"></p>
+
+            <!-- Advanced Toggle -->
+            <div class="pt-2 border-t border-slate-800">
+              <button type="button" @click="showAdvanced = !showAdvanced"
+                      class="text-xs font-medium text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                <span x-text="showAdvanced ? '▼' : '▶'"></span>
+                <span x-text="t('settingsAdvanced')"></span>
+              </button>
+
+              <div x-show="showAdvanced" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('fontSizeBodyLabel')"></label>
+                  <input type="number" min="12" max="160" x-model.number="sc.font_size_body" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('fontSizeH1Label')"></label>
+                  <input type="number" min="16" max="200" x-model.number="sc.font_size_heading1" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('fontSizeH2Label')"></label>
+                  <input type="number" min="14" max="180" x-model.number="sc.font_size_heading2" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('fontSizeFinalLabel')"></label>
+                  <input type="number" min="16" max="240" x-model.number="sc.font_size_final" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('flyinDurationLabel')"></label>
+                  <input type="number" min="0.2" max="5.0" step="0.1" x-model.number="sc.flyin_duration" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('landingYRatioLabel')"></label>
+                  <input type="number" min="0.1" max="0.9" step="0.05" x-model.number="sc.landing_y_ratio" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('flyinBounceLabel')"></label>
+                  <input type="number" min="0" max="1" step="0.1" x-model.number="sc.flyin_bounce" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('flyinRotationMaxLabel')"></label>
+                  <input type="number" min="0" max="360" x-model.number="sc.flyin_rotation_max" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('flyinScaleModeLabel')"></label>
+                  <select x-model="sc.flyin_scale_mode" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm">
+                    <option value="random" x-text="t('scaleModeRandom')"></option>
+                    <option value="shrink" x-text="t('scaleModeShrink')"></option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('flyinWanderRadiusLabel')"></label>
+                  <input type="number" min="0" max="1000" step="20" x-model.number="sc.flyin_wander_radius" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('leadingSecondsLabel')"></label>
+                  <input type="number" min="0" max="10" step="0.5" x-model.number="sc.leading_seconds" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('trailingSecondsLabel')"></label>
+                  <input type="number" min="0" max="30" step="0.5" x-model.number="sc.trailing_seconds" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('gifFpsLabel')"></label>
+                  <input type="number" min="5" max="30" x-model.number="sc.gif_fps" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('gifScaleLabel')"></label>
+                  <input type="number" min="0.2" max="1.0" step="0.1" x-model.number="sc.gif_scale" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('gifMaxFramesLabel')"></label>
+                  <input type="number" min="30" max="1500" step="50" x-model.number="sc.gif_max_frames" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-400 mb-1" x-text="t('gifLoopLabel')"></label>
+                  <select x-model.number="sc.gif_loop" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm">
+                    <option :value="0" x-text="t('gifLoopInfinite')"></option>
+                    <option :value="1" x-text="t('gifLoopOnce')"></option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate Action Button -->
+        <button type="button"
+                @click="generate()"
+                :disabled="isGenerating"
+                :class="isGenerating ? 'opacity-60 cursor-not-allowed' : 'hover:from-emerald-400 hover:to-cyan-400 shadow-lg shadow-emerald-500/20'"
+                class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold text-base transition flex items-center justify-center gap-2">
+          <svg x-show="isGenerating" class="animate-spin h-5 w-5 text-slate-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span x-text="isGenerating ? t('generatingBtn') : t('generateBtn')"></span>
+        </button>
+      </section>
+
+      <!-- Right Column: Progress & Preview -->
+      <section class="lg:col-span-5 space-y-5 lg:sticky lg:top-24">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider" x-text="t('previewTitle')"></h2>
+
+            <div class="flex items-center gap-1.5 text-xs">
+              <span class="text-slate-400" x-text="t('previewBgLabel')"></span>
+              <button type="button" @click="previewBg = 'checker'" :class="previewBg === 'checker' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-2 py-1 rounded" x-text="t('previewBgChecker')"></button>
+              <button type="button" @click="previewBg = 'dark'" :class="previewBg === 'dark' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-2 py-1 rounded" x-text="t('previewBgDark')"></button>
+              <button type="button" @click="previewBg = 'light'" :class="previewBg === 'light' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-2 py-1 rounded" x-text="t('previewBgLight')"></button>
+            </div>
+          </div>
+
+          <div x-show="isGenerating || statusKey" class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span :class="statusKey === 'status.failed' ? 'text-rose-400' : 'text-slate-300'" x-text="t(statusKey)"></span>
+              <span class="font-mono text-emerald-400" x-text="`${progress}%`"></span>
+            </div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-200"
+                   :style="`width: ${progress}%`"></div>
+            </div>
+            <p x-show="errorMessage" class="text-xs text-rose-400 bg-rose-950/40 border border-rose-900 rounded-lg p-2.5 mt-2" x-text="errorMessage"></p>
+          </div>
+
+          <div :class="{
+                 'bg-checker': previewBg === 'checker',
+                 'bg-black': previewBg === 'dark',
+                 'bg-white': previewBg === 'light'
+               }"
+               class="min-h-[280px] rounded-xl border border-slate-800 flex items-center justify-center p-4 overflow-hidden">
+            <template x-if="!result">
+              <p class="text-xs text-slate-400 text-center max-w-xs bg-slate-950/75 px-4 py-3 rounded-lg" x-text="t('previewEmpty')"></p>
+            </template>
+
+            <template x-if="result && result.output_format === 'gif'">
+              <img :src="result.output_url" alt="Generated GIF" class="max-w-full max-h-[420px] object-contain rounded" />
+            </template>
+
+            <template x-if="result && result.output_format === 'webm'">
+              <video :src="result.output_url" controls autoplay loop muted playsinline class="max-w-full max-h-[420px] rounded"></video>
+            </template>
+          </div>
+
+          <template x-if="result">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-800">
+              <div class="text-xs text-slate-400 flex items-center gap-3">
+                <span><span x-text="t('fileInfoFormat')"></span>: <strong class="text-slate-200 uppercase" x-text="result.output_format"></strong></span>
+                <span><span x-text="t('fileInfoSize')"></span>: <strong class="text-slate-200" x-text="formatBytes(result.file_size_bytes)"></strong></span>
+              </div>
+              <a :href="result.download_url"
+                 :download="result.output_filename"
+                 class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold transition text-center"
+                 x-text="t('downloadBtn')"></a>
+            </div>
+          </template>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer: Font Licenses & Open Source Notice -->
+  <footer id="licenses" class="border-t border-slate-800 bg-slate-900/60 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+      <div>
+        <h3 class="text-sm font-bold text-slate-200" x-text="t('footerLicenseTitle')"></h3>
+        <p class="text-xs text-slate-400 mt-1" x-text="t('footerLicenseDesc')"></p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <template x-for="f in fonts" :key="f.id">
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between gap-2">
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-semibold text-sm text-white" x-text="f.name"></span>
+                <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800" x-text="f.license_name"></span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1" x-text="lang === 'ja' ? f.style_ja : f.style_en"></p>
+              <p class="text-[11px] text-slate-500 mt-1" x-text="f.copyright"></p>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
+              <a :href="f.source_url" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-slate-200 underline">Source</a>
+              <button type="button" @click="licenseModalFont = f" class="text-emerald-400 hover:text-emerald-300 font-medium" x-text="t('viewLicenseText')"></button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <p class="text-[11px] text-slate-500 pt-2 border-t border-slate-800/60">
+        GIF encoding powered by <a href="https://github.com/mattdesl/gifenc" target="_blank" rel="noopener noreferrer" class="underline hover:text-slate-300">gifenc</a> (<a href="./js/vendor/gifenc-LICENSE.txt" target="_blank" class="underline hover:text-slate-300">MIT License</a>).
+      </p>
+    </div>
+  </footer>
+
+  <!-- License Full Text Modal -->
+  <div x-show="licenseModalFont" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" @click.self="licenseModalFont = null">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h4 class="font-bold text-white" x-text="licenseModalFont?.name"></h4>
+          <p class="text-xs text-slate-400" x-text="licenseModalFont?.license_name"></p>
+        </div>
+        <button type="button" @click="licenseModalFont = null" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200" x-text="t('closeBtn')"></button>
+      </div>
+      <div class="p-5 overflow-y-auto">
+        <pre class="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed" x-text="licenseModalFont?.license_text"></pre>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

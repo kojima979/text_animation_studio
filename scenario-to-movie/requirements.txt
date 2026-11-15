@@ -1,0 +1,6 @@
+python-docx==1.2.0
+pillow==11.3.0
+moviepy==2.2.1
+numpy==2.4.6
+PyYAML==6.0.3
+imageio-ffmpeg==0.6.0

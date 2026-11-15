@@ -1,0 +1,60 @@
+# scenario-to-movie 設定ファイル
+
+# 背景色（CSSカラーコード）
+background_color: "transparent"
+
+# 文字色
+font_color: "#000000"
+
+# フォントファイルパス（TTF/OTF/TTC）
+# 空の場合はシステムフォントを自動検出
+font_path: "DotGothic16-Regular.ttf"
+
+# フォントサイズ
+font_size_body: 36
+font_size_heading1: 56
+font_size_heading2: 46
+font_size_final: 80        # 最終行専用フォントサイズ（px）
+
+# 行間倍率
+line_spacing: 1.8
+
+# 空行の高さ（px）
+empty_line_height: 60
+
+# コンポーネント間の余白（px）
+paragraph_spacing: 20
+
+# 左右余白（px）
+margin_x: 180
+
+# 解像度 [幅, 高さ]
+resolution: [1920, 1080]
+
+# フレームレート
+fps: 10
+
+# スクロール速度（px/秒）
+scroll_speed: 60
+
+# 開始・終了の空白時間（秒）
+leading_seconds: 0
+trailing_seconds: 30
+
+# フライインアニメーション
+flyin_duration: 1.8        # 1ブロックのフライイン時間（秒）
+landing_y_ratio: 0.45       # 着地Y位置（0.0=上端, 0.5=中央, 1.0=下端）
+flyin_bounce: 0.5          # バウンス強度（0=なし、1=強）
+flyin_rotation_max: 180    # 最大初期回転角（度）
+flyin_alpha_start: 0       # 登場時の透明度（0=完全透明, 255=不透明）
+flyin_scale_mode: random   # random: ランダムスケール / shrink: 大→小
+flyin_scale_min: 0.3       # 最小初期スケール（randomモード）
+flyin_scale_max: 2.0       # 最大初期スケール（randomモード）
+flyin_scale_shrink_start: 3.0  # shrinkモード時の初期スケール倍率
+gif_fps: 20                # APNG / GIF のフレームレート
+gif_scale: 1.0             # APNG / GIF の解像度倍率（1.0 = フル 1920x1080）
+gif_max_frames: 1000       # フレーム上限（超えた場合は fps を自動調整）
+gif_loop: 1                # ループ回数（0=無限ループ、1=1回再生して最終フレームで停止）
+flyin_wander_radius: 400   # 漂い半径（px）
+flyin_wander_freq_min: 0.8 # 漂い周波数の最小値（Hz）
+flyin_wander_freq_max: 2.5 # 漂い周波数の最大値（Hz）

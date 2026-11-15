@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+web/.venv/
+.venv/
+
+# Generated output artifacts
+web/app/static/outputs/*
+!web/app/static/outputs/.gitkeep
+scenario-to-movie/*.docx
+scenario-to-movie/*.pages
+scenario-to-movie/*.gif
+typewriter/*.gif
+
+# OS / Editor
+.DS_Store
+*.swp

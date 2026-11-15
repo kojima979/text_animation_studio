@@ -1,0 +1,14 @@
+text: |
+  無理だ
+
+output: typewriter.gif
+font_path: "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
+font_size: 48
+color: "#000001"
+char_delay: 80
+cursor_blink_interval: 500
+blink_count: 3
+end_delay: 2000
+padding: 20
+loop: false
+cursor: "▌"
